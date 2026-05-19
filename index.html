@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F6E56">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Auditoría">
+<meta name="description" content="Checklists de auditoría institucional — Hotelería hospitalaria y experiencia del paciente">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Auditoría Institucional</title>
+<style>
+  :root {
+    --green: #3B6D11; --green-bg: #EAF3DE; --green-border: #97C459;
+    --amber: #854F0B; --amber-bg: #FAEEDA; --amber-border: #EF9F27;
+    --red: #A32D2D; --red-bg: #FCEBEB; --red-border: #F09595;
+    --blue: #185FA5; --blue-bg: #E6F1FB;
+    --teal: #0F6E56; --teal-light: #E1F5EE;
+    --text: #1a1a1a; --text2: #555; --text3: #888;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --bg: #f5f5f3; --bg2: #fff; --bg3: #efefec;
+    --radius: 10px; --radius-sm: 7px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text: #f0f0f0; --text2: #aaa; --text3: #666;
+      --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+      --bg: #141414; --bg2: #1e1e1e; --bg3: #2a2a2a;
+      --green-bg: #1a2e0a; --amber-bg: #2e1e06; --red-bg: #2e0f0f; --blue-bg: #0a1e36; --teal-light: #061e18;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text); }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--teal);
+    color: #fff;
+    padding: 12px 16px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { flex: 1; font-size: 16px; font-weight: 600; }
+  .topbar-sub { font-size: 11px; opacity: 0.8; margin-top: 1px; }
+  .topbar-icon { font-size: 22px; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: var(--bg2);
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    padding-bottom: var(--safe-bottom);
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 8px 4px 6px; gap: 3px;
+    border: none; background: transparent; cursor: pointer;
+    color: var(--text3); font-size: 10px; font-weight: 500;
+    transition: color 0.15s;
+  }
+  .nav-tab.active { color: var(--teal); }
+  .nav-tab svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .nav-badge {
+    position: absolute; top: 5px; right: calc(50% - 18px);
+    background: var(--teal); color: #fff;
+    font-size: 9px; font-weight: 700;
+    width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-tab-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+
+  /* SCREENS */
+  .screen { display: none; flex-direction: column; height: calc(100vh - 56px - var(--safe-bottom)); overflow-y: auto; padding-bottom: 16px; }
+  .screen.active { display: flex; }
+
+  /* META FORM */
+  .meta-card {
+    margin: 12px 12px 0;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--text2); font-weight: 500; }
+  .field input, .field select {
+    font-size: 14px; padding: 8px 10px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--bg3); color: var(--text);
+    width: 100%; appearance: none; -webkit-appearance: none;
+  }
+  .field-full { grid-column: 1 / -1; }
+
+  /* SECTION LIST */
+  .section-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .sec-item {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: background 0.12s;
+  }
+  .sec-item:active { background: var(--bg3); }
+  .sec-icon { font-size: 20px; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--teal-light); }
+  .sec-info { flex: 1; min-width: 0; }
+  .sec-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .sec-prog { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .sec-prog-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+  .sec-prog-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .sem-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--border); }
+  .sec-arrow { color: var(--text3); font-size: 18px; flex-shrink: 0; }
+
+  /* CHECKLIST SCREEN */
+  .checklist-header {
+    background: var(--bg2);
+    border-bottom: 0.5px solid var(--border);
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--teal); font-size: 22px; padding: 4px;
+    display: flex; align-items: center;
+  }
+  .checklist-title { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); }
+  .checklist-pct { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .items-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .item-card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .item-label { flex: 1; font-size: 13px; color: var(--text); line-height: 1.4; }
+  .score-btns { display: flex; gap: 4px; flex-shrink: 0; }
+  .sb {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 0.5px solid var(--border2);
+    background: var(--bg3); font-size: 14px; font-weight: 600;
+    cursor: pointer; color: var(--text2);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s; -webkit-tap-highlight-color: transparent;
+  }
+  .sb.s0 { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+  .sb.s1 { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+  .sb.s2 { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+  .obs-card { margin: 0 12px 12px; }
+  .obs-label { font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 5px; }
+  textarea {
+    width: 100%; padding: 10px 12px; font-size: 13px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius); background: var(--bg2); color: var(--text);
+    resize: none; min-height: 70px; font-family: inherit;
+  }
+  .section-nav { display: flex; gap: 8px; margin: 0 12px 8px; }
+  .snav-btn {
+    flex: 1; padding: 10px; font-size: 13px; font-weight: 500;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius); background: var(--bg2); color: var(--text);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .snav-btn:active { background: var(--bg3); }
+  .snav-btn:disabled { opacity: 0.35; cursor: default; }
+
+  /* DASHBOARD SCREEN */
+  .dash-scroll { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .dash-section { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .dash-section-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .prog-global-val { font-size: 36px; font-weight: 700; color: var(--text); line-height: 1; }
+  .prog-global-sub { font-size: 12px; color: var(--text3); margin-top: 4px; margin-bottom: 10px; }
+  .prog-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 0.4s; background: var(--teal); }
+  .nivel-badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+  .nivel-ex { background: var(--green-bg); color: var(--green); }
+  .nivel-bu { background: var(--blue-bg); color: var(--blue); }
+  .nivel-re { background: var(--amber-bg); color: var(--amber); }
+  .nivel-cr { background: var(--red-bg); color: var(--red); }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi-card { background: var(--bg3); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .kpi-lbl { font-size: 10px; color: var(--text2); font-weight: 500; margin-bottom: 3px; line-height: 1.3; }
+  .kpi-val { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+  .kpi-bar { height: 3px; border-radius: 2px; margin-top: 6px; background: var(--border); overflow: hidden; }
+  .kpi-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+  .kf-g { background: var(--green-border); }
+  .kf-a { background: var(--amber-border); }
+  .kf-r { background: var(--red-border); }
+  .sem-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+  .sem-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .sem-name { flex: 1; font-size: 12px; color: var(--text2); }
+  .sem-pct { font-size: 12px; font-weight: 600; color: var(--text); }
+  .export-btn {
+    width: 100%; padding: 14px; font-size: 14px; font-weight: 600;
+    border: none; border-radius: var(--radius);
+    background: var(--teal); color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 4px;
+  }
+  .export-btn:active { opacity: 0.85; }
+
+  /* SCALE REFERENCE */
+  .scale-ref { display: flex; gap: 6px; margin-bottom: 10px; }
+  .scale-pill { flex: 1; padding: 5px 6px; border-radius: 6px; font-size: 10px; font-weight: 600; text-align: center; }
+  .sp0 { background: var(--red-bg); color: var(--red); }
+  .sp1 { background: var(--amber-bg); color: var(--amber); }
+  .sp2 { background: var(--green-bg); color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-icon">📋</span>
+  <div>
+    <div class="topbar-title">Auditoría Institucional</div>
+    <div class="topbar-sub">Hotelería hospitalaria · Experiencia del paciente</div>
+  </div>
+</div>
+
+<!-- SCREEN: CHECKLIST LIST -->
+<div class="screen active" id="screen-home">
+  <div class="meta-card">
+    <div class="meta-grid">
+      <div class="field">
+        <label>Servicio</label>
+        <select id="meta-servicio">
+          <option value="">— Seleccionar —</option>
+          <option>UTI polivalente</option>
+          <option>UCI coronaria</option>
+          <option>UCI quirúrgica</option>
+          <option>Cuidados intermedios</option>
+          <option>Internación clínica</option>
+          <option>Admisión</option>
+          <option>Guardia</option>
+          <option>Consultorios externos</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Auditor/a</label>
+        <input type="text" id="meta-auditor" placeholder="Nombre completo">
+      </div>
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="meta-fecha">
+      </div>
+      <div class="field">
+        <label>Hora</label>
+        <input type="time" id="meta-hora">
+      </div>
+    </div>
+  </div>
+
+  <div class="section-list" id="section-list"></div>
+</div>
+
+<!-- SCREEN: CHECKLIST DETAIL -->
+<div class="screen" id="screen-checklist">
+  <div class="checklist-header">
+    <button class="back-btn" id="btn-back" aria-label="Volver">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="checklist-title" id="cl-title"></div>
+    <div class="checklist-pct" id="cl-pct">0/0</div>
+  </div>
+  <div class="items-list" id="items-list"></div>
+  <div class="obs-card">
+    <div class="obs-label">Observaciones / desvíos detectados</div>
+    <textarea id="obs-area" placeholder="Registrá hallazgos, desvíos o notas de campo..."></textarea>
+  </div>
+  <div class="section-nav">
+    <button class="snav-btn" id="btn-prev">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Anterior
+    </button>
+    <button class="snav-btn" id="btn-next">
+      Siguiente
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN: DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-scroll">
+    <div class="dash-section">
+      <div class="dash-section-title">Progreso global</div>
+      <div class="prog-global-val" id="d-glob-val">0%</div>
+      <div class="prog-global-sub" id="d-glob-sub">0 / 0 ítems completados</div>
+      <div class="prog-bar"><div class="prog-fill" id="d-glob-bar" style="width:0%"></div></div>
+      <span class="nivel-badge nivel-cr" id="d-nivel">Sin datos</span>
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-title">KPIs por dimensión</div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-lbl">Experiencia del paciente</div>
+          <div class="kpi-val" id="kpi-exp">—</div>
+          <div class="kpi-bar"><div class="kpi-fill" id="fi-exp" style="width:0%"></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Hotelería hospitalaria</div>
+          <div class="kpi-val" id="kpi-hot">—</div>
+          <div class="kpi-bar"><div class="kpi-fill" id="fi-hot" style="width:0%"></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Humanización</div>
+          <div class="kpi-val" id="kpi-hum">—</div>
+          <div class="kpi-bar"><div class="kpi-fill" id="fi-hum" style="width:0%"></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Índice global</div>
+          <div class="kpi-val" id="kpi-glob">—</div>
+          <div class="kpi-bar"><div class="kpi-fill" id="fi-glob" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-title">Semaforización por área</div>
+      <div id="sem-list-dash"></div>
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-title">Escala de referencia</div>
+      <div class="scale-ref">
+        <div class="scale-pill sp0">0 — No cumple</div>
+        <div class="scale-pill sp1">1 — Cumplimiento parcial</div>
+        <div class="scale-pill sp2">2 — Cumple adecuadamente</div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.5;">
+        Verde &gt;90% · Amarillo 80–89% · Rojo &lt;80%
+      </div>
+    </div>
+
+    <button class="export-btn" id="btn-export">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar resultado
+    </button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="nav-home" onclick="showScreen('home')">
+    <div class="nav-tab-wrap">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Checklists
+    </div>
+  </button>
+  <button class="nav-tab" id="nav-dashboard" onclick="showScreen('dashboard')">
+    <div class="nav-tab-wrap">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+  </button>
+</nav>
+
+<script>
+const SECTIONS = {
+  cl1a:{title:"A. Recepción y admisión",icon:"🚪",group:"exp",items:["Personal saluda cordialmente","Información clara y comprensible","Tiempo de espera adecuado","Señalización visible","Paciente comprende proceso de atención","Ambiente ordenado","Presentación personal adecuada"]},
+  cl1b:{title:"B. Comunicación y trato",icon:"💬",group:"exp",items:["Personal se presenta al paciente","Comunicación respetuosa","Lenguaje claro","Escucha activa","Manejo adecuado de reclamos","Privacidad respetada","Empatía observable"]},
+  cl1c:{title:"C. Experiencia de internación",icon:"🛏️",group:"exp",items:["Habitación limpia","Baño higienizado","Temperatura confortable","Ruido controlado","Cama en buenas condiciones","Timbre accesible","Iluminación adecuada","Olores desagradables ausentes"]},
+  cl1d:{title:"D. Familia y acompañantes",icon:"👨‍👩‍👧",group:"exp",items:["Información brindada a familia","Trato respetuoso","Espacios adecuados para espera","Contención emocional observable","Orientación institucional adecuada"]},
+  cl2a:{title:"E. Limpieza y desinfección",icon:"🧹",group:"hot",items:["Pisos limpios","Superficies desinfectadas","Baños higienizados","Residuos correctamente segregados","Ausencia de derrames","Carros de limpieza adecuados","Registro de limpieza visible"]},
+  cl2b:{title:"F. Confort y ambiente",icon:"🌡️",group:"hot",items:["Temperatura adecuada","Ventilación adecuada","Control de ruido","Iluminación adecuada","Privacidad visual","Estado del mobiliario","Habitaciones ordenadas"]},
+  cl2c:{title:"G. Alimentación",icon:"🥗",group:"hot",items:["Entrega en horario","Temperatura adecuada","Presentación adecuada","Dieta correcta","Higiene en manipulación","Identificación correcta del paciente"]},
+  cl2d:{title:"H. Seguridad ambiental",icon:"🛡️",group:"hot",items:["Barandas funcionales","Piso seco","Señalización de riesgo","Accesos despejados","Equipamiento seguro","Matafuegos visibles","Salidas de emergencia señalizadas"]},
+  cl3:{title:"I. Humanización",icon:"❤️",group:"hum",items:["Respeto por intimidad","Uso adecuado del nombre del paciente","Participación familiar","Comunicación empática","Trato digno","Explicación de procedimientos","Atención centrada en persona"]}
+};
+
+const keys = Object.keys(SECTIONS);
+const scores = {};
+const obsData = {};
+keys.forEach(k => { scores[k] = new Array(SECTIONS[k].items.length).fill(null); obsData[k] = ''; });
+let currentKey = keys[0];
+
+function semColor(p) {
+  if (p === null) return '#ccc';
+  if (p >= 90) return '#639922';
+  if (p >= 80) return '#EF9F27';
+  return '#E24B4A';
+}
+function fillCls(p) {
+  if (p === null) return 'kf-g';
+  if (p >= 90) return 'kf-g';
+  if (p >= 80) return 'kf-a';
+  return 'kf-r';
+}
+function pct(key) {
+  const arr = scores[key];
+  const filled = arr.filter(v => v !== null);
+  if (!filled.length) return null;
+  return Math.round(filled.reduce((a,b) => a + (b||0), 0) / (arr.length * 2) * 100);
+}
+function groupPct(grp) {
+  const ks = keys.filter(k => SECTIONS[k].group === grp);
+  const vals = ks.map(k => {
+    const arr = scores[k]; const f = arr.filter(v => v !== null);
+    if (!f.length) return null;
+    return f.reduce((a,b) => a + (b||0), 0) / (arr.length * 2);
+  }).filter(v => v !== null);
+  if (!vals.length) return null;
+  return Math.round(vals.reduce((a,b) => a+b, 0) / vals.length * 100);
+}
+function totalItems() { return keys.reduce((a,k) => a + SECTIONS[k].items.length, 0); }
+function completedItems() { return keys.reduce((a,k) => a + scores[k].filter(v => v !== null).length, 0); }
+
+function saveToStorage() {
+  localStorage.setItem('audit_scores', JSON.stringify(scores));
+  localStorage.setItem('audit_obs', JSON.stringify(obsData));
+  localStorage.setItem('audit_meta', JSON.stringify({
+    servicio: document.getElementById('meta-servicio').value,
+    auditor: document.getElementById('meta-auditor').value,
+    fecha: document.getElementById('meta-fecha').value,
+    hora: document.getElementById('meta-hora').value
+  }));
+}
+function loadFromStorage() {
+  try {
+    const s = localStorage.getItem('audit_scores');
+    const o = localStorage.getItem('audit_obs');
+    const m = localStorage.getItem('audit_meta');
+    if (s) Object.assign(scores, JSON.parse(s));
+    if (o) Object.assign(obsData, JSON.parse(o));
+    if (m) {
+      const meta = JSON.parse(m);
+      document.getElementById('meta-servicio').value = meta.servicio || '';
+      document.getElementById('meta-auditor').value = meta.auditor || '';
+      document.getElementById('meta-fecha').value = meta.fecha || '';
+      document.getElementById('meta-hora').value = meta.hora || '';
+    }
+  } catch(e) {}
+}
+
+function buildSectionList() {
+  const list = document.getElementById('section-list');
+  list.innerHTML = '';
+  keys.forEach(k => {
+    const s = SECTIONS[k];
+    const p = pct(k);
+    const filled = scores[k].filter(v => v !== null).length;
+    const total = s.items.length;
+    const progPct = Math.round(filled / total * 100);
+    const fillColor = p !== null ? semColor(p) : 'var(--teal)';
+    const div = document.createElement('div');
+    div.className = 'sec-item';
+    div.innerHTML = `
+      <div class="sec-icon">${s.icon}</div>
+      <div class="sec-info">
+        <div class="sec-name">${s.title}</div>
+        <div class="sec-prog">${filled} / ${total} ítems completados${p !== null ? ' · ' + p + '%' : ''}</div>
+        <div class="sec-prog-bar"><div class="sec-prog-fill" style="width:${progPct}%;background:${fillColor}"></div></div>
+      </div>
+      <div class="sem-dot" style="background:${semColor(p)}"></div>
+      <div class="sec-arrow">›</div>
+    `;
+    div.addEventListener('click', () => openChecklist(k));
+    list.appendChild(div);
+  });
+}
+
+function openChecklist(key) {
+  currentKey = key;
+  const s = SECTIONS[key];
+  document.getElementById('cl-title').textContent = s.title;
+  renderItems();
+  document.getElementById('obs-area').value = obsData[key] || '';
+  document.getElementById('obs-area').oninput = function() {
+    obsData[key] = this.value;
+    saveToStorage();
+  };
+  const ci = keys.indexOf(key);
+  document.getElementById('btn-prev').disabled = ci === 0;
+  document.getElementById('btn-next').disabled = ci === keys.length - 1;
+  document.getElementById('screen-home').classList.remove('active');
+  document.getElementById('screen-checklist').classList.add('active');
+  document.getElementById('screen-dashboard').classList.remove('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+}
+
+function renderItems() {
+  const s = SECTIONS[currentKey];
+  const arr = scores[currentKey];
+  const filled = arr.filter(v => v !== null).length;
+  document.getElementById('cl-pct').textContent = filled + '/' + s.items.length;
+  const list = document.getElementById('items-list');
+  list.innerHTML = '';
+  s.items.forEach((item, i) => {
+    const v = arr[i];
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    let btns = [0,1,2].map(val => `<button class="sb${v===val?' s'+val:''}" data-idx="${i}" data-val="${val}">${val}</button>`).join('');
+    card.innerHTML = `<span class="item-label">${item}</span><div class="score-btns">${btns}</div>`;
+    card.querySelectorAll('.sb').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.dataset.idx);
+        const val = parseInt(this.dataset.val);
+        scores[currentKey][idx] = val;
+        saveToStorage();
+        renderItems();
+        updateDashboard();
+        buildSectionList();
+      });
+    });
+    list.appendChild(card);
+  });
+}
+
+function updateDashboard() {
+  ['exp','hot','hum'].forEach(g => {
+    const p = groupPct(g);
+    document.getElementById('kpi-'+g).textContent = p !== null ? p+'%' : '—';
+    const f = document.getElementById('fi-'+g);
+    f.style.width = (p||0)+'%'; f.className = 'kpi-fill ' + fillCls(p);
+  });
+  const allV = ['exp','hot','hum'].map(g => groupPct(g)).filter(v => v !== null);
+  const gl = allV.length ? Math.round(allV.reduce((a,b) => a+b,0)/allV.length) : null;
+  document.getElementById('kpi-glob').textContent = gl !== null ? gl+'%' : '—';
+  const fg = document.getElementById('fi-glob'); fg.style.width = (gl||0)+'%'; fg.className = 'kpi-fill ' + fillCls(gl);
+
+  const total = totalItems(), comp = completedItems();
+  const gp = Math.round(comp/total*100);
+  document.getElementById('d-glob-val').textContent = gp+'%';
+  document.getElementById('d-glob-sub').textContent = comp+' / '+total+' ítems completados';
+  document.getElementById('d-glob-bar').style.width = gp+'%';
+  const nv = document.getElementById('d-nivel');
+  if (gl === null) { nv.textContent='Sin datos'; nv.className='nivel-badge nivel-cr'; }
+  else if (gl>=90) { nv.textContent='Excelente (>90%)'; nv.className='nivel-badge nivel-ex'; }
+  else if (gl>=80) { nv.textContent='Bueno (80–89%)'; nv.className='nivel-badge nivel-bu'; }
+  else if (gl>=70) { nv.textContent='Regular (70–79%)'; nv.className='nivel-badge nivel-re'; }
+  else { nv.textContent='Crítico (<70%)'; nv.className='nivel-badge nivel-cr'; }
+
+  const semList = document.getElementById('sem-list-dash');
+  semList.innerHTML = '';
+  keys.forEach(k => {
+    const p = pct(k);
+    semList.innerHTML += `<div class="sem-row"><div class="sem-dot" style="background:${semColor(p)}"></div><span class="sem-name">${SECTIONS[k].title}</span><span class="sem-pct">${p!==null?p+'%':'—'}</span></div>`;
+  });
+}
+
+function showScreen(name) {
+  ['home','checklist','dashboard'].forEach(s => {
+    document.getElementById('screen-'+s).classList.toggle('active', s===name);
+  });
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (name === 'home') { document.getElementById('nav-home').classList.add('active'); buildSectionList(); }
+  if (name === 'dashboard') { document.getElementById('nav-dashboard').classList.add('active'); updateDashboard(); }
+}
+
+document.getElementById('btn-back').addEventListener('click', () => showScreen('home'));
+
+document.getElementById('btn-prev').addEventListener('click', () => {
+  const ci = keys.indexOf(currentKey);
+  if (ci > 0) openChecklist(keys[ci-1]);
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  const ci = keys.indexOf(currentKey);
+  if (ci < keys.length-1) openChecklist(keys[ci+1]);
+});
+
+document.getElementById('btn-export').addEventListener('click', () => {
+  const svc = document.getElementById('meta-servicio').value || '—';
+  const aud = document.getElementById('meta-auditor').value || '—';
+  const fch = document.getElementById('meta-fecha').value || '—';
+  const hora = document.getElementById('meta-hora').value || '—';
+  let txt = `AUDITORÍA INSTITUCIONAL\nClínica Marcos Paz\nServicio: ${svc} | Auditor/a: ${aud} | Fecha: ${fch} | Hora: ${hora}\n`;
+  txt += '='.repeat(60) + '\n\n';
+  keys.forEach(k => {
+    const s = SECTIONS[k]; const arr = scores[k]; const p = pct(k);
+    txt += `${s.title}: ${p!==null?p+'%':'sin datos'}\n`;
+    s.items.forEach((item,i) => { txt += `  · ${item}: ${arr[i]!==null?arr[i]:'—'}\n`; });
+    if (obsData[k]) txt += `  Observaciones: ${obsData[k]}\n`;
+    txt += '\n';
+  });
+  const allV = ['exp','hot','hum'].map(g=>groupPct(g)).filter(v=>v!==null);
+  const gl = allV.length ? Math.round(allV.reduce((a,b)=>a+b,0)/allV.length) : null;
+  txt += '='.repeat(60) + '\n';
+  txt += `ÍNDICE GLOBAL: ${gl!==null?gl+'%':'sin datos suficientes'}\n`;
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`auditoria_${fch}_${svc.replace(/ /g,'_')}.txt`; a.click();
+  URL.revokeObjectURL(url);
+});
+
+['meta-servicio','meta-auditor','meta-fecha','meta-hora'].forEach(id => {
+  document.getElementById(id).addEventListener('change', saveToStorage);
+});
+
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('meta-fecha').value = today;
+const now = new Date();
+document.getElementById('meta-hora').value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+
+loadFromStorage();
+buildSectionList();
+updateDashboard();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
